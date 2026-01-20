@@ -92,18 +92,35 @@ using namespace facebook::react;
       case LiquidGlassViewColorScheme::System:
         _view.overrideUserInterfaceStyle = UIUserInterfaceStyleUnspecified;
         break;
-        
+
       case LiquidGlassViewColorScheme::Dark:
         _view.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
         break;
-        
+
       case LiquidGlassViewColorScheme::Light:
         _view.overrideUserInterfaceStyle = UIUserInterfaceStyleLight;
         break;
     }
     needsSetup = YES;
   }
-  
+
+  if (oldViewProps.shape != newViewProps.shape) {
+    switch (newViewProps.shape) {
+      case LiquidGlassViewShape::Rect:
+        [_view setShape:LiquidGlassShapeRect];
+        break;
+
+      case LiquidGlassViewShape::Capsule:
+        [_view setShape:LiquidGlassShapeCapsule];
+        break;
+
+      case LiquidGlassViewShape::Circle:
+        [_view setShape:LiquidGlassShapeCircle];
+        break;
+    }
+    _needsInvalidateLayer = YES;
+  }
+
   // `border`
   if (oldViewProps.borderStyles != newViewProps.borderStyles || oldViewProps.borderRadii != newViewProps.borderRadii ||
       oldViewProps.borderColors != newViewProps.borderColors) {
@@ -119,28 +136,56 @@ using namespace facebook::react;
 
 - (void)finalizeUpdates:(RNComponentViewUpdateMask)updateMask {
   [super finalizeUpdates:updateMask];
-  
+
   if (!_needsInvalidateLayer) {
     return;
   }
-  
+
   _needsInvalidateLayer = NO;
-  
+
   if (@available(iOS 26.0, tvOS 26.0, *)) {
-    const auto borderMetrics = _props->resolveBorderMetrics(_layoutMetrics);
+    UICornerRadius *topLeft;
+    UICornerRadius *topRight;
+    UICornerRadius *bottomLeft;
+    UICornerRadius *bottomRight;
 
+    switch (_view.shape) {
+      case LiquidGlassShapeCapsule: {
+        UICornerRadius *pill = [UICornerRadius pillRadius];
+        topLeft = pill;
+        topRight = pill;
+        bottomLeft = pill;
+        bottomRight = pill;
+        break;
+      }
 
-    auto borderRadii = borderMetrics.borderRadii;
-    
-    CGFloat topLeftRadius = MAX(borderRadii.topLeft.horizontal, borderRadii.topLeft.vertical);
-    CGFloat topRightRadius = MAX(borderRadii.topRight.horizontal, borderRadii.topRight.vertical);
-    CGFloat bottomLeftRadius = MAX(borderRadii.bottomLeft.horizontal, borderRadii.bottomLeft.vertical);
-    CGFloat bottomRightRadius = MAX(borderRadii.bottomRight.horizontal, borderRadii.bottomRight.vertical);
+      case LiquidGlassShapeCircle: {
+        CGFloat circleRadius = MIN(_view.bounds.size.width, _view.bounds.size.height) / 2.0;
+        UICornerRadius *circle = [UICornerRadius fixedRadius:circleRadius];
+        topLeft = circle;
+        topRight = circle;
+        bottomLeft = circle;
+        bottomRight = circle;
+        break;
+      }
 
-    UICornerRadius *topLeft = [UICornerRadius fixedRadius:topLeftRadius];
-    UICornerRadius *topRight = [UICornerRadius fixedRadius:topRightRadius];
-    UICornerRadius *bottomLeft = [UICornerRadius fixedRadius:bottomLeftRadius];
-    UICornerRadius *bottomRight = [UICornerRadius fixedRadius:bottomRightRadius];
+      case LiquidGlassShapeRect:
+      default: {
+        const auto borderMetrics = _props->resolveBorderMetrics(_layoutMetrics);
+        auto borderRadii = borderMetrics.borderRadii;
+
+        CGFloat topLeftRadius = MAX(borderRadii.topLeft.horizontal, borderRadii.topLeft.vertical);
+        CGFloat topRightRadius = MAX(borderRadii.topRight.horizontal, borderRadii.topRight.vertical);
+        CGFloat bottomLeftRadius = MAX(borderRadii.bottomLeft.horizontal, borderRadii.bottomLeft.vertical);
+        CGFloat bottomRightRadius = MAX(borderRadii.bottomRight.horizontal, borderRadii.bottomRight.vertical);
+
+        topLeft = [UICornerRadius fixedRadius:topLeftRadius];
+        topRight = [UICornerRadius fixedRadius:topRightRadius];
+        bottomLeft = [UICornerRadius fixedRadius:bottomLeftRadius];
+        bottomRight = [UICornerRadius fixedRadius:bottomRightRadius];
+        break;
+      }
+    }
 
     _view.cornerConfiguration = [UICornerConfiguration configurationWithTopLeftRadius:topLeft topRightRadius:topRight bottomLeftRadius:bottomLeft bottomRightRadius:bottomRight];
   }

@@ -33,6 +33,17 @@ export interface NativeProps extends ViewProps {
    * Defaults to 'system'.
    */
   colorScheme?: CodegenTypes.WithDefault<'light' | 'dark' | 'system', 'system'>;
+  /**
+   * The shape of the glass effect.
+   * - 'rect': rectangular with user-defined borderRadius
+   * - 'capsule': pill shape with fully rounded ends
+   * - 'circle': circular shape using min(width, height) / 2
+   *
+   * Note: 'capsule' and 'circle' ignore the borderRadius style property.
+   *
+   * Defaults to 'rect'.
+   */
+  shape?: CodegenTypes.WithDefault<'rect' | 'capsule' | 'circle', 'rect'>;
 }
 
 export default codegenNativeComponent<NativeProps>('LiquidGlassView');

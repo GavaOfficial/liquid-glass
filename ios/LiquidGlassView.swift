@@ -21,6 +21,12 @@ import UIKit
 
 }
 
+@objc public enum LiquidGlassShape: Int {
+  case rect
+  case capsule
+  case circle
+}
+
 #if compiler(>=6.2)
 
 @available(iOS 26.0, tvOS 26.0, *)
@@ -29,6 +35,7 @@ import UIKit
   @objc public var effectTintColor: UIColor?
   @objc public var interactive: Bool = false
   @objc public var style: LiquidGlassEffect = .regular
+  @objc public var shape: LiquidGlassShape = .rect
 
   public override func layoutSubviews() {
     if (self.effect != nil) { return }
