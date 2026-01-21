@@ -151,7 +151,7 @@ using namespace facebook::react;
 
     switch (_view.shape) {
       case LiquidGlassShapeCapsule: {
-        UICornerRadius *pill = [UICornerRadius pillRadius];
+        UICornerRadius *pill = UICornerRadius.pill;
         topLeft = pill;
         topRight = pill;
         bottomLeft = pill;
